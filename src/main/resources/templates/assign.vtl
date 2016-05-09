@@ -1,0 +1,14 @@
+<h1>Assign Another Category to the Task:</h1>
+
+<form action="/categories/$category.getId()/tasks/$task.getId()/assign" method="post">
+  <div class="form-group">
+    <label for="categoryId">Select a List</label>
+    <select id="categoryId" name="categoryId" type="text">
+      <option value=" ">Please select category</option>
+      #foreach($category in $categories)
+      <option value="$category.getId()">$category.getName()</option>
+      #end
+    </select>
+  </div>
+  <button type="submit" class="btn btn-success" id="add_category">Add Category</button>
+</form>

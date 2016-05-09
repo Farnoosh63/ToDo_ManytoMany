@@ -18,7 +18,6 @@ public class App {
 
       setPort(port);
 
-
     staticFileLocation("/public");
     String layout = "templates/layout.vtl";
 
@@ -39,19 +38,13 @@ public class App {
       return null;
     });
 
-
     get("/categories/:id", (request, response) -> {
       HashMap<String, Object> model = new HashMap<String, Object>();
-      // Category categoryInput = Category.find(Integer.parseInt(request.params("id")));
-      Category category = Category.find(Integer.parseInt(request.params("id")));
-    //  List<Task> taskList = category.getTasks();
+      Category category = Category.find(Integer.parseInt(request.params(":id")));
       model.put("category", category);
-    //  model.put("tasks", taskList);
-    //  model.put("category", categoryInput); // we are calling category in categpry.vtl
       model.put("template", "templates/category.vtl");
       return new ModelAndView(model, layout);
     }, new VelocityTemplateEngine());
-
 
     post("/tasks", (request,response) -> {
       HashMap<String, Object> model = new HashMap<String, Object>();
@@ -65,48 +58,77 @@ public class App {
       return new ModelAndView(model, layout);
     }, new VelocityTemplateEngine());
 
-
-// //for update task
-//     post("/tasks/:id", (request, response) -> {
-//       HashMap<String, Object> model = new HashMap<String, Object>();
-//       Task task = Task.find(Integer.parseInt(request.params("id")));
-//       Category category = Category.find(task.getCategoryId());
-//       String description = request.queryParams("description");
-//       task.update(description);
-//         model.put("category", category); // because I am calling $category.getName() in the success page
-//       model.put("template", "templates/task-update-success.vtl");
-//       return new ModelAndView(model, layout);
-//     }, new VelocityTemplateEngine());
-//
-// //for showing the update page in task.vtl
-//     get("/tasks/:id", (request, response) -> {
-//       HashMap<String, Object> model = new HashMap<String, Object>();
-//       Task task = Task.find(Integer.parseInt(request.params("id")));
-//       Category category = Category.find(task.getCategoryId());
-//       model.put("task", task); // we need the put on /tasks/$task.getId() for the form action
-//       //also we are calling $task.getDescription() in task.vtl file
-//       model.put("template", "templates/task.vtl");
-//       return new ModelAndView(model, layout);
-//     }, new VelocityTemplateEngine());
-//
-//for deleting the task and reload the root page
-    post("/tasks/:id/delete", (request, response) -> {
+//for update task
+    post("/tasks/:id", (request, response) -> {
       HashMap<String, Object> model = new HashMap<String, Object>();
-      Task task = Task.find(Integer.parseInt(request.params("id")));
+      int categoryId = Integer.parseInt(request.queryParams("category_id"));
+      Category category = Category.find(categoryId);
+
+      int taskId = Integer.parseInt(request.params(":id"));
+      Task task = Task.find(taskId);
+      String description = request.queryParams("description");
+      task.update(description);
+      model.put("category", category);
+
+      String url = String.format("/categories/%d", category.getId());
+      response.redirect(url);
+      return null;
+    });
+
+//for showing the update page in task.vtl
+    get("/categories/:category_id/tasks/:task_id", (request, response) -> {
+      HashMap<String, Object> model = new HashMap<String, Object>();
+      Task task = Task.find(Integer.parseInt(request.params(":task_id")));
+      Integer categoryId = Integer.parseInt(request.params(":category_id"));
+      Category category = Category.find(categoryId);
+      model.put("category",category);
+      model.put("task", task);
+      model.put("template", "templates/task.vtl");
+      return new ModelAndView(model, layout);
+    }, new VelocityTemplateEngine());
+
+//for deleting the task and reload the root page
+    post("categories/:category_id/tasks/:task_id/delete", (request, response) -> {
+      HashMap<String, Object> model = new HashMap<String, Object>();
+      Task task = Task.find(Integer.parseInt(request.params(":task_id")));
       task.delete();
+      Integer categoryId = Integer.parseInt(request.params(":category_id"));
+      Category category = Category.find(categoryId);
+      String url = String.format("/categories/%d", category.getId());
+      response.redirect(url);
+      return null;
+    });
+
+//for deleting the categories anc reload the root page
+    post("/categories/:id/delete", (request, response) -> {
+      HashMap<String, Object> model = new HashMap<String, Object>();
+      Category categories = Category.find(Integer.parseInt(request.params(":id")));
+      categories.delete();
       response.redirect("/");
       return null;
     });
 
-// //for deleting the categories anc reload the root page
-//     post("/categories/:id/delete", (request, response) -> {
-//       HashMap<String, Object> model = new HashMap<String, Object>();
-//       Category categories = Category.find(Integer.parseInt(request.params("id")));
-//       categories.delete();
-//       response.redirect("/");
-//       return null;
-//     });
-//
+//for showing the assign another category in assign.vtl
+    get("/categories/:category_id/tasks/:task_id/assign", (request, response) -> {
+      HashMap<String, Object> model = new HashMap<String, Object>();
+      Task task = Task.find(Integer.parseInt(request.params(":task_id")));
+      Integer categoryId = Integer.parseInt(request.params(":category_id"));
+      Category category = Category.find(categoryId);
+      model.put("categories", Category.all());
+      model.put("template", "templates/assign.vtl");
+      return new ModelAndView(model, layout);
+    }, new VelocityTemplateEngine());
+
+//for assigning another category to the task
+    post("categories/:category_id/tasks/:task_id/assign", (request, response) -> {
+      HashMap<String, Object> model = new HashMap<String, Object>();
+      Task task = Task.find(Integer.parseInt(request.params(":task_id")));
+      Integer categoryId = Integer.parseInt(request.queryParams("categoryId"));
+      Category category = Category.find(categoryId);
+      category.addTask(task);
+      response.redirect("/");
+      return null;
+    });
 
   }
 }

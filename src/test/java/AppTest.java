@@ -84,6 +84,37 @@ public class AppTest extends FluentTest {
     goTo(url);
     assertThat(pageSource()).doesNotContain("Mow the lawn");
   }
-  
+  @Test
+  public void checkUpdatedTaskButton() {
+    Category testCategory = new Category("Household chores");
+    testCategory.save();
+    Task testTask = new Task("Mow the lawn");
+    testTask.save();
+    testCategory.addTask(testTask);
+    String url = String.format("http://localhost:4567/categories/%d/tasks/%d", testCategory.getId(), testTask.getId());
+    goTo(url);
+    fill("#description").with("Do the dishes");
+    submit("#updateTask");
+    assertThat(pageSource()).contains("Do the dishes");
+  }
 
+  @Test
+  public void addAnotherCategoryToTask() {
+    Category testCategory = new Category("Household chores");
+    testCategory.save();
+    Category secondCategory = new Category("Mom chores");
+    Task testTask = new Task("Do the dishes");
+    testTask.save();
+    testCategory.addTask(testTask);
+    String url = String.format("http://localhost:4567/categories/%d", testCategory.getId());
+    goTo(url);
+    click("a", withText("Assign Another Category"));
+    String urlAssignPage = String.format("http://localhost:4567/categories/%d/tasks/%d/assign", testCategory.getId(), testTask.getId());
+    goTo(urlAssignPage);
+    assertThat(pageSource()).contains("Assign Another Category to the Task");
+    fillSelect("#categoryId").withText("Please select category");
+    // click("option", withText("Mom chores"));
+    submit("#add_category");
+    assertThat(pageSource()).contains("Mom chores");
+  }
 }
