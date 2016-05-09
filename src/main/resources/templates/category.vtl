@@ -1,0 +1,14 @@
+<h1>$category.getName() tasks:</h1>
+
+<h1> update Category name : $category.getName() </h1>
+<ul>
+  #foreach($task in $category.getTasks())
+    <li>$task.getDescription()</li>
+    <a href="/tasks/$task.getId()" class="btn btn-link">Update Task</a>
+    <form action="/tasks/$task.getId()/delete" method="post">
+      <button type="submit" class="btn btn-link" id="deleteTask">Delete Task</button>
+    </form>
+  #end
+</ul>
+
+<a href="/">Back to main page</a>
